@@ -3,138 +3,61 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    box-sizing: border-box;
-  }
-  
+  * { box-sizing: border-box; }
   body {
-    @apply bg-bg text-text antialiased;
+    @apply bg-[#050505] text-[#e8e8e8] antialiased;
     font-family: 'Inter', system-ui, sans-serif;
-    background-image:
-      radial-gradient(ellipse at top center, rgba(66, 255, 143, 0.03) 0%, transparent 60%),
-      radial-gradient(ellipse at bottom left, rgba(66, 255, 143, 0.02) 0%, transparent 50%);
-    background-attachment: fixed;
+    font-size: 13px;
+    line-height: 1.4;
   }
-
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #222;
-    border-radius: 3px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #333;
-  }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1d1d1d; border-radius: 2px; }
 }
 
 @layer components {
-  /* Glass panel cards */
-  .glass-panel {
-    @apply bg-panel border border-border rounded-xl backdrop-blur-glass;
-    background: linear-gradient(135deg, rgba(17, 17, 17, 0.95), rgba(17, 17, 17, 0.8));
-  }
+  .panel { @apply bg-[#0b0b0b] border border-[#1d1d1d]; }
+  .panel-header { @apply px-3 py-2 bg-[#0b0b0b] border-b border-[#1d1d1d] text-xs font-semibold text-[#8a8a8a] uppercase tracking-wider; }
+  .stat-row { @apply flex items-center justify-between px-3 py-1.5 border-b border-[#1d1d1d]/50 last:border-0; }
+  .stat-label { @apply text-[#8a8a8a] text-xs; }
+  .stat-value { @apply text-[#e8e8e8] text-xs font-medium tabular-nums; }
+  .stat-good { @apply text-[#4ade80]; }
+  .stat-avg { @apply text-[#fbbf24]; }
+  .stat-bad { @apply text-[#f87171]; }
 
-  .glass-panel-hover {
-    @apply glass-panel transition-all duration-200;
-  }
-  .glass-panel-hover:hover {
-    border-color: rgba(66, 255, 143, 0.3);
-    box-shadow: 0 0 30px rgba(66, 255, 143, 0.05);
-  }
+  .btn { @apply px-3 py-1.5 text-xs font-medium rounded transition-colors cursor-pointer; }
+  .btn-primary { @apply bg-[#4ade80]/10 text-[#4ade80] border border-[#4ade80]/20 hover:bg-[#4ade80]/20; }
+  .btn-secondary { @apply bg-[#0b0b0b] text-[#8a8a8a] border border-[#1d1d1d] hover:text-[#e8e8e8]; }
+  .btn-ghost { @apply text-[#8a8a8a] hover:text-[#e8e8e8]; }
 
-  /* Stats grid */
-  .stat-grid {
-    @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3;
-  }
+  .input { @apply bg-[#050505] border border-[#1d1d1d] px-2 py-1.5 text-xs text-[#e8e8e8] placeholder-[#555] outline-none focus:border-[#4ade80]/40; }
 
-  .stat-card {
-    @apply glass-panel p-4 flex flex-col gap-1;
-  }
-  .stat-card .stat-label {
-    @apply text-muted text-xs uppercase tracking-wider;
-  }
-  .stat-card .stat-value {
-    @apply text-2xl font-bold text-text;
-  }
-  .stat-card .stat-change {
-    @apply text-xs;
-  }
-  .stat-card .stat-change.up { @apply text-accent; }
-  .stat-card .stat-change.down { @apply text-danger; }
+  .nav-item { @apply px-2.5 py-1.5 text-xs text-[#8a8a8a] hover:text-[#e8e8e8] rounded transition-colors; }
+  .nav-item.active { @apply text-[#4ade80] bg-[#4ade80]/5; }
 
-  /* Buttons */
-  .btn {
-    @apply px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150;
-  }
-  .btn-primary {
-    @apply bg-accent text-black hover:bg-accent-dim;
-  }
-  .btn-secondary {
-    @apply bg-panel border border-border text-text hover:border-accent/30;
-  }
-  .btn-danger {
-    @apply bg-danger/10 border border-danger/30 text-danger hover:bg-danger/20;
-  }
-  .btn-ghost {
-    @apply text-muted hover:text-text hover:bg-panel;
-  }
+  .tab { @apply px-3 py-1.5 text-xs text-[#8a8a8a] border-b-2 border-transparent cursor-pointer hover:text-[#e8e8e8]; }
+  .tab.active { @apply text-[#4ade80] border-[#4ade80]; }
 
-  /* Inputs */
-  .input {
-    @apply bg-[#0a0a0a] border border-border rounded-lg px-3 py-2 text-sm text-text 
-           placeholder:text-muted-dim focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20
-           transition-colors duration-150;
-  }
+  .progress-bar { @apply h-1 bg-[#1d1d1d] rounded-full overflow-hidden; }
+  .progress-fill { @apply h-full rounded-full transition-all; }
 
-  /* Navigation */
-  .nav-link {
-    @apply text-muted hover:text-text transition-colors text-sm font-medium px-3 py-2 rounded-lg;
-  }
-  .nav-link.active {
-    @apply text-accent bg-accent/5;
-  }
+  .histogram-bar { @apply h-2 bg-[#1d1d1d] rounded-sm relative overflow-hidden; }
+  .histogram-fill { @apply h-full rounded-sm; }
+  .histogram-marker { @apply absolute top-0 w-0.5 h-full bg-[#e8e8e8] z-10; }
 
-  /* Tab */
-  .tab {
-    @apply text-muted text-sm font-medium px-4 py-2 border-b-2 border-transparent transition-colors cursor-pointer;
-  }
-  .tab.active {
-    @apply text-accent border-accent;
-  }
+  .table-header { @apply text-[#8a8a8a] text-[11px] font-medium uppercase tracking-wider px-2 py-1.5 text-left; }
+  .table-cell { @apply px-2 py-1.5 text-xs text-[#e8e8e8] border-b border-[#1d1d1d]/50; }
+  .table-row { @apply hover:bg-[#4ade80]/[0.02] transition-colors; }
 
-  /* Progress bar */
-  .progress-bar {
-    @apply h-2 bg-[#1a1a1a] rounded-full overflow-hidden;
-  }
-  .progress-bar .fill {
-    @apply h-full rounded-full transition-all duration-500;
-  }
+  .grid-3col { @apply grid grid-cols-3 gap-3; }
+  .grid-2col { @apply grid grid-cols-2 gap-3; }
 
-  /* Replay timeline */
-  .timeline-marker {
-    @apply absolute top-0 w-0.5 h-full;
-  }
+  .rating-circle { @apply w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0; }
+  .rating-circle-sm { @apply w-7 h-7 rounded-full border flex items-center justify-center text-[10px] font-bold flex-shrink-0; }
 
-  /* Tooltip */
-  .tooltip {
-    @apply absolute z-50 bg-[#1a1a1a] border border-border text-xs text-text px-2 py-1 rounded-md
-           pointer-events-none opacity-0 transition-opacity;
-  }
-  .tooltip-parent:hover .tooltip {
-    @apply opacity-100;
-  }
-}
+  .meta-key { @apply text-[#555] text-[10px] uppercase tracking-wider; }
+  .meta-val { @apply text-[#e8e8e8] text-xs; }
 
-@layer utilities {
-  .text-glow {
-    text-shadow: 0 0 20px rgba(66, 255, 143, 0.3);
-  }
-  .border-glow {
-    box-shadow: 0 0 15px rgba(66, 255, 143, 0.1);
-  }
+  .rl-timeline { @apply relative h-2 bg-[#1d1d1d] rounded-full; }
+  .rl-marker { @apply absolute top-0 w-0.5 h-full; }
 }

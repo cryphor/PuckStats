@@ -2,97 +2,59 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, BarChart3, Users, Film, Search, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
 export function Navbar() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [q, setQ] = useState('');
 
   const links = [
-    { href: '/', label: 'Dashboard', icon: Activity },
-    { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/leaderboard', label: 'Leaderboard', icon: Users },
-    { href: '/replay', label: 'Replays', icon: Film },
+    { href: '/', label: 'Home' },
+    { href: '/leaderboard', label: 'Leaderboard' },
+    { href: '/analytics', label: 'Analytics' },
+    { href: '/compare', label: 'Compare' },
+    { href: '/replay', label: 'Replays' },
   ];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/player/${searchQuery.trim()}`;
-    }
+    if (q.trim()) window.location.href = `/player/${q.trim()}`;
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-            <Activity size={18} className="text-black" />
+    <div className="border-b border-[#1d1d1d] bg-[#050505] sticky top-0 z-50">
+      <div className="flex items-center h-9 px-4 gap-4 max-w-[1600px] mx-auto">
+        <Link href="/" className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="w-5 h-5 rounded bg-[#4ade80] flex items-center justify-center">
+            <span className="text-[10px] font-bold text-black">P</span>
           </div>
-          <span className="text-lg font-bold tracking-tight">
-            <span className="text-text">Puck</span>
-            <span className="text-accent">Stats</span>
-          </span>
+          <span className="text-sm font-bold text-[#e8e8e8]">PuckStats</span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-1">
-          {links.map((link) => {
-            const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`nav-link ${isActive ? 'active' : ''}`}
-              >
-                <link.icon size={16} className="inline mr-1.5 -mt-0.5" />
-                {link.label}
-              </Link>
-            );
-          })}
+        <div className="flex items-center gap-0.5">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`nav-item ${link.href === '/' ? pathname === '/' ? 'active' : '' : pathname.startsWith(link.href) ? 'active' : ''}`}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
 
-        {/* Search */}
-        <form onSubmit={handleSearch} className="hidden md:flex items-center">
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-dim" />
-            <input
-              type="text"
-              placeholder="Search player..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="input pl-9 py-1.5 w-48 text-xs"
-            />
-          </div>
+        <div className="flex-1" />
+
+        <form onSubmit={handleSearch} className="flex items-center">
+          <input
+            type="text"
+            placeholder="Steam ID..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="input w-36 text-[11px]"
+          />
         </form>
-
-        {/* Mobile menu button */}
-        <button onClick={() => setOpen(!open)} className="md:hidden btn-ghost p-2">
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
       </div>
-
-      {/* Mobile menu */}
-      {open && (
-        <div className="md:hidden border-t border-border bg-bg/95 backdrop-blur-xl animate-slide-up">
-          <div className="px-4 py-3 flex flex-col gap-1">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className={`nav-link ${pathname === link.href ? 'active' : ''}`}
-              >
-                <link.icon size={16} className="inline mr-2" />
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-    </nav>
+    </div>
   );
 }

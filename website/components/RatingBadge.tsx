@@ -1,36 +1,12 @@
-interface Props {
-  rating: number;
-  label: string;
-  size?: 'sm' | 'md' | 'lg';
-  showPercentile?: boolean;
-  percentile?: number;
-}
+interface Props { rating: number; label: string; size?: 'sm' | 'md'; }
 
-export function RatingBadge({ rating, label, size = 'md', showPercentile, percentile }: Props) {
-  const sizes = { sm: 'text-xs w-12 h-12', md: 'text-sm w-16 h-16', lg: 'text-lg w-20 h-20' };
-  const fontSizes = { sm: 'text-sm', md: 'text-lg', lg: 'text-2xl' };
-
-  const getColor = (val: number) => {
-    if (val >= 90) return 'border-emerald-400 text-emerald-400';
-    if (val >= 75) return 'border-green-400 text-green-400';
-    if (val >= 60) return 'border-yellow-400 text-yellow-400';
-    if (val >= 40) return 'border-orange-400 text-orange-400';
-    return 'border-red-400 text-red-400';
-  };
-
+export function RatingBadge({ rating, label, size = 'sm' }: Props) {
+  const sz = size === 'sm' ? 'w-7 h-7 text-[10px]' : 'w-9 h-9 text-xs';
+  const c = rating >= 75 ? 'border-[#4ade80]/50 text-[#4ade80]' : rating >= 50 ? 'border-[#fbbf24]/40 text-[#fbbf24]' : 'border-[#f87171]/40 text-[#f87171]';
   return (
-    <div className="flex flex-col items-center gap-1 group">
-      <div
-        className={`${sizes[size]} rounded-full border-2 flex items-center justify-center
-                    ${getColor(rating)} bg-panel transition-all duration-300
-                    group-hover:border-glow`}
-      >
-        <span className={`${fontSizes[size]} font-bold tabular-nums`}>{rating}</span>
-      </div>
-      <span className="text-muted text-xs text-center">{label}</span>
-      {showPercentile && percentile !== undefined && (
-        <span className="text-muted-dim text-[10px]">Top {100 - percentile}%</span>
-      )}
+    <div className="flex flex-col items-center gap-0.5">
+      <div className={`${sz} rounded-full border flex items-center justify-center font-bold ${c}`}>{rating}</div>
+      <span className="text-[9px] text-[#555]">{label}</span>
     </div>
   );
 }

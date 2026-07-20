@@ -1,88 +1,32 @@
 'use client';
-
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import type { RatingTrend } from '@/lib/api';
-import { format, parseISO } from 'date-fns';
 
-interface Props {
-  trends: RatingTrend[];
-  height?: number;
-}
+interface Props { trends: { category: string; points: { date: string; rating: number }[] }[]; height?: number; }
 
-export function RatingTrendChart({ trends, height = 300 }: Props) {
-  const colors: Record<string, string> = {
-    Skating: '#42ff8f',
-    Shooting: '#f472b6',
-    Stickhandling: '#60a5fa',
-    Passing: '#fbbf24',
-    GameSense: '#a78bfa',
-    Overall: '#ffffff',
-  };
-
-  // Merge all trend points into unified timeline
-  const dateMap = new Map<string, any>();
-  for (const trend of trends) {
-    for (const point of trend.points) {
-      const date = typeof point.date === 'string' ? point.date.split('T')[0] : point.date;
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)![trend.category] = point.rating;
-    }
+export function RatingTrendChart({ trends, height = 120 }: Props) {
+  const colors: Record<string, string> = { Skating: '#4ade80', Shooting: '#f472b6', Stickhandling: '#60a5fa', Passing: '#fbbf24', GameSense: '#a78bfa', Overall: '#e8e8e8' };
+  const merged: any[] = [];
+  for (const t of trends) for (const p of t.points) {
+    let e = merged.find((m: any) => m.date === p.date.split('T')[0]);
+    if (!e) { e = { date: p.date.split('T')[0] }; merged.push(e); }
+    e[t.category] = p.rating;
   }
-
-  const mergedData = Array.from(dateMap.values())
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  const displayTrends = ['Overall', 'Skating', 'Shooting', 'GameSense'];
+  merged.sort((a, b) => a.date.localeCompare(b.date));
 
   return (
-    <div className="glass-panel p-4">
-      <h3 className="text-sm font-semibold text-text mb-3">Rating Progression</h3>
+    <div className="panel rounded p-2">
+      <div className="text-[10px] text-[#555] mb-1 uppercase tracking-wider">Rating History</div>
       <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={mergedData}>
-          <CartesianGrid stroke="#1a1a1a" strokeDasharray="3 3" />
-          <XAxis
-            dataKey="date"
-            tick={{ fill: '#666', fontSize: 10 }}
-            tickFormatter={(d) => format(parseISO(d), 'MMM d')}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            domain={[0, 100]}
-            tick={{ fill: '#666', fontSize: 10 }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <Tooltip
-            contentStyle={{
-              background: '#111',
-              border: '1px solid #222',
-              borderRadius: '8px',
-              fontSize: '12px',
-              color: '#fff',
-            }}
-          />
-          {displayTrends.map((cat) => (
-            <Line
-              key={cat}
-              type="monotone"
-              dataKey={cat}
-              stroke={colors[cat] || '#888'}
-              strokeWidth={cat === 'Overall' ? 2.5 : 1.5}
-              dot={false}
-              connectNulls
-            />
+        <LineChart data={merged.slice(-30)}>
+          <CartesianGrid stroke="#1d1d1d" strokeDasharray="2 2" />
+          <XAxis dataKey="date" tick={{ fill: '#555', fontSize: 9 }} tickFormatter={(d: string) => d.slice(5)} tickLine={false} axisLine={false} />
+          <YAxis domain={[0, 100]} tick={{ fill: '#555', fontSize: 9 }} tickLine={false} axisLine={false} width={20} />
+          <Tooltip contentStyle={{ background: '#0b0b0b', border: '1px solid #1d1d1d', borderRadius: 0, fontSize: '11px', color: '#e8e8e8' }} />
+          {['Overall', 'Skating', 'Shooting'].map(cat => (
+            <Line key={cat} type="monotone" dataKey={cat} stroke={colors[cat] || '#555'} strokeWidth={cat === 'Overall' ? 1.5 : 1} dot={false} connectNulls />
           ))}
         </LineChart>
       </ResponsiveContainer>
-      <div className="flex items-center gap-4 mt-2 flex-wrap">
-        {displayTrends.map((cat) => (
-          <div key={cat} className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: colors[cat] }} />
-            <span className="text-xs text-muted">{cat}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

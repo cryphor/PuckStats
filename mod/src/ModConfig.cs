@@ -13,7 +13,7 @@ namespace PuckStats
         public bool Enabled = true;
         public bool AutoUpload = true;
         public bool ShowOverlay = true;
-        public string ApiEndpoint = "https://puckstats-api.onrender.com";
+        public string ApiEndpoint = "https://puck-stats-praise.vercel.app";
         public int RequestTimeout = 10;
         public int TelemetryRateHz = 20;
         public bool RetryOnFailure = true;

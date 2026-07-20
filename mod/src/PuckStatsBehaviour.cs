@@ -283,6 +283,8 @@ namespace PuckStats
                 if (player.IsLocalPlayer)
                 {
                     _collector.SetLocalPlayer(player);
+                    var sid = player.SteamId.Value.ToString();
+                    NetworkSender.Initialize(sid);
                 }
             }
             catch { }

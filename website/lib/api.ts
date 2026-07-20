@@ -28,9 +28,54 @@ export interface PlayerProfile {
   percentiles: Percentiles;
   archetype: string;
   scoutingReport: ScoutingReport;
+  // Basic
   totalMatches: number;
+  totalWins: number;
+  totalLosses: number;
+  totalOtl: number;
+  // Scoring
   totalGoals: number;
   totalAssists: number;
+  totalPoints: number;
+  plusMinus: number;
+  totalPim: number;
+  totalTimeOnIce: number;
+  totalShots: number;
+  totalShotAttempts: number;
+  totalHits: number;
+  // Shooting detail
+  highDangerGoals: number;
+  lowDangerGoals: number;
+  powerplayGoals: number;
+  shorthandedGoals: number;
+  gameWinningGoals: number;
+  // Passing
+  primaryAssists: number;
+  secondaryAssists: number;
+  totalPasses: number;
+  passesCompleted: number;
+  dangerousPasses: number;
+  // Faceoffs
+  faceoffsTaken: number;
+  faceoffsWon: number;
+  // Possession
+  totalPossessionTime: number;
+  totalPuckTouches: number;
+  turnovers: number;
+  recoveries: number;
+  // Defense
+  totalBlocks: number;
+  totalInterceptions: number;
+  takeaways: number;
+  stickChecks: number;
+  pokeChecks: number;
+  // Special teams
+  powerplayAssists: number;
+  shorthandedAssists: number;
+  // On-ice
+  onIceGoalsFor: number;
+  onIceGoalsAgainst: number;
+  // Legacy
   totalSaves: number;
   winRate: number;
   recentMatches: RecentMatch[];
