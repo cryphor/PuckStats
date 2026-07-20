@@ -131,11 +131,19 @@ namespace PuckStats
                 match.ServerName = sm.Server.Value.Name.ToString();
             }
 
+            // Always set SteamId — fall back to NetworkSender's cached value
             if (LocalPlayer != null)
             {
                 match.SteamId = LocalPlayer.SteamId.Value.ToString();
                 match.Username = LocalPlayer.Username.Value.ToString();
                 match.Team = LocalPlayer.Team.ToString();
+            }
+            
+            // If LocalPlayer is null, use the session cached SteamId from NetworkSender
+            if (string.IsNullOrEmpty(match.SteamId))
+            {
+                match.SteamId = NetworkSender.GetSteamId();
+                match.Username = match.SteamId.Length > 10 ? match.SteamId.Substring(0, 10) : match.SteamId;
             }
             match.DistanceTraveled = _distanceTraveled;
             match.AverageSpeed = avgSpeed;

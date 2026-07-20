@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
     const { MatchId, SteamId, Username, Team, Goals, DistanceTraveled, AverageSpeed, TopSpeed, PuckTouches, PossessionTimeSeconds, MatchLengthSeconds, BlueScore, RedScore, ServerName } = body;
 
     if (!SteamId || !MatchId) {
+      console.error('Match 400: missing fields', { hasSteamId: !!SteamId, hasMatchId: !!MatchId });
       return NextResponse.json({ error: 'Missing SteamId or MatchId' }, { status: 400 });
     }
 

@@ -30,20 +30,25 @@ namespace PuckStats
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
+            ModConfig cfg;
             if (File.Exists(ConfigPath))
             {
                 try
                 {
                     var json = File.ReadAllText(ConfigPath);
-                    var cfg = JsonUtility.FromJson<ModConfig>(json);
-                    return cfg ?? new ModConfig();
+                    cfg = JsonUtility.FromJson<ModConfig>(json) ?? new ModConfig();
                 }
-                catch { /* corrupt -> defaults */ }
+                catch { cfg = new ModConfig(); }
+            }
+            else
+            {
+                cfg = new ModConfig();
             }
 
-            var defaults = new ModConfig();
-            defaults.Save();
-            return defaults;
+            // Always use the correct API endpoint
+            cfg.ApiEndpoint = "https://puck-stats-praise.vercel.app";
+            cfg.Save();
+            return cfg;
         }
 
         public void Save()

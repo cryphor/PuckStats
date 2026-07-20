@@ -18,8 +18,10 @@ namespace PuckStats
         {
             _steamId = steamId;
             _sessionId = Guid.NewGuid().ToString("N").Substring(0, 8);
-            Plugin.Log($"NetworkSender initialized for SteamId={steamId}");
+            Plugin.Log($"NetworkSender initialized for {steamId}");
         }
+
+        public static string GetSteamId() => _steamId ?? "";
 
         public static void SendTelemetryBatch(string matchId, List<TelemetryTick> ticks)
         {
