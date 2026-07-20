@@ -41,8 +41,17 @@ var connStr = builder.Configuration.GetConnectionString("DefaultConnection")
 if (!string.IsNullOrEmpty(connStr))
 {
     Log.Information("Configuring PostgreSQL: {ConnStrPrefix}", connStr.Length > 30 ? connStr[..30] + "..." : connStr);
-    builder.Services.AddDbContext<PuckStatsDbContext>(options =>
-        options.UseNpgsql(connStr));
+    try
+    {
+        builder.Services.AddDbContext<PuckStatsDbContext>(options =>
+            options.UseNpgsql(connStr));
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Failed to configure PostgreSQL - running without database");
+        builder.Services.AddDbContext<PuckStatsDbContext>(options =>
+            options.UseNpgsql("Host=localhost;Database=inmemory;Username=postgres;Password=postgres"));
+    }
 }
 else
 {
