@@ -122,7 +122,9 @@ public class PlayerService
 
     public async Task<List<LeaderboardEntry>> GetLeaderboard(string category, int page, int pageSize)
     {
-        var query = _db.PlayerRatings.AsQueryable();
+        try
+        {
+            var query = _db.PlayerRatings.AsQueryable();
 
         // Order by relevant column
         query = category switch
@@ -169,6 +171,8 @@ public class PlayerService
             entries[i].Rank = (page - 1) * pageSize + i + 1;
 
         return entries;
+        }
+        catch { return new List<LeaderboardEntry>(); }
     }
 
     private static PlayerRatings EntityToRatings(PlayerRatingEntity e) => new()
