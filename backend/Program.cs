@@ -97,7 +97,7 @@ try
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<PuckStatsDbContext>();
-        db.Database.Migrate();
+        db.Database.EnsureCreated();
     }
 }
 catch (Exception ex)

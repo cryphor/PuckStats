@@ -10,17 +10,6 @@ services:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: ConnectionStrings__DefaultConnection
-        fromDatabase:
-          name: puckstats-db
-          property: connectionString
-      - key: ConnectionStrings__Redis
-        value: ""
+        value: "Host=db.gxwdigzfxzbgjzkdzoys.supabase.co;Database=postgres;Username=postgres;Password=PuckStats2024!;SSL Mode=Require;Trust Server Certificate=true"
       - key: ReplayStoragePath
         value: /data/replays
-
-databases:
-  - name: puckstats-db
-    databaseName: puckstats
-    plan: free
-    region: oregon
-    postgresMajorVersion: 16
