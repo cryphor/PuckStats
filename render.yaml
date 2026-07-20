@@ -25,3 +25,4 @@ databases:
     databaseName: puckstats
     plan: free
     region: oregon
+    postgresMajorVersion: 16
