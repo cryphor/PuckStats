@@ -21,9 +21,7 @@ services:
         value: /data/replays
 
 databases:
-  - type: postgres
-    name: puckstats-db
-    region: oregon
-    plan: free
+  - name: puckstats-db
     databaseName: puckstats
-    ipAllowList: []
+    plan: free
+    region: oregon
