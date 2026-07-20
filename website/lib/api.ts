@@ -78,6 +78,8 @@ export interface PlayerProfile {
   // Legacy
   totalSaves: number;
   winRate: number;
+  averageSpeed: number;
+  topSpeed: number;
   recentMatches: RecentMatch[];
   lastUpdated: string;
 }

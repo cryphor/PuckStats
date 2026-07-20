@@ -114,6 +114,11 @@ namespace PuckStats
             _goalScorers.Add(player.SteamId.Value.ToString());
         }
 
+        public void RecordAssistEvent(Player player)
+        {
+            _assisters.Add(player.SteamId.Value.ToString());
+        }
+
         public MatchInfo FinalizeMatch(string matchId, float startTime, float endTime)
         {
             float avgSpeed = _sampleCount > 0 ? _totalSpeed / _sampleCount : 0f;
@@ -149,6 +154,7 @@ namespace PuckStats
             match.AverageSpeed = avgSpeed;
             match.TopSpeed = _maxSpeed;
             match.Goals = _goalScorers.Count;
+            match.Assists = _assisters.Count;
             match.PuckTouches = _puckTouches;
             match.PossessionTimeSeconds = _possessionTime;
 

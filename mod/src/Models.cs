@@ -97,6 +97,7 @@ namespace PuckStats
         public float AverageSpeed;
         public float TopSpeed;
         public int Goals;
+        public int Assists;
         public int PuckTouches;
         public float PossessionTimeSeconds;
     }

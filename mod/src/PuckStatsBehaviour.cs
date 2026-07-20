@@ -124,6 +124,7 @@ namespace PuckStats
                 {
                     int assisted = assists - _lastKnownAssists;
                     LogMsg($"[PuckStats] <color=#fbbf24>ASSIST!</color> You helped set up a goal!  <color=#fbbf24>(+{assisted})</color>");
+                    _collector.RecordAssistEvent(local);
                 }
 
                 _lastKnownGoals = goals;

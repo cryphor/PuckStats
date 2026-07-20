@@ -1,149 +1,77 @@
-let pool: any = null;
+const SB = process.env.SUPABASE_URL || '';
+const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
+const H = { 'apikey': KEY, 'Authorization': `Bearer ${KEY}`, 'Content-Type': 'application/json' };
 
-export async function query(sqlQuery: string, params?: any[]) {
-  if (!pool) {
+export async function query(sql: string, params?: any[]) {
+  try {
     const { Pool } = require('pg');
-    const connStr = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.DATABASE_URL;
-    if (!connStr) throw new Error('No database URL found');
-    const cleanUrl = connStr.replace(/[\?&]sslmode=[^&]*/g, '');
-    pool = new Pool({ connectionString: cleanUrl, ssl: { rejectUnauthorized: false }, max: 1, idleTimeoutMillis: 5000, connectionTimeoutMillis: 10000 });
-  }
-  const client = await pool.connect();
-  try { return await client.query(sqlQuery, params); } finally { client.release(); }
+    const p = new Pool({ connectionString: process.env.POSTGRES_URL, ssl: { rejectUnauthorized: false }, max: 1 });
+    const c = await p.connect(); const r = await c.query(sql, params);
+    c.release(); await p.end(); return r;
+  } catch { return { rows: [] }; }
 }
 
 export async function initTables() {
   try {
-    await query(`
-      CREATE TABLE IF NOT EXISTS "Players" (
-        "SteamId" VARCHAR(32) PRIMARY KEY,
-        "Username" VARCHAR(128) NOT NULL DEFAULT '',
-        "AvatarUrl" TEXT DEFAULT '',
-        "Team" VARCHAR(16) DEFAULT 'None',
-        "Archetype" VARCHAR(32) DEFAULT 'Unknown',
-        "Role" VARCHAR(16) DEFAULT 'Attacker',
-        "Handedness" VARCHAR(8) DEFAULT 'Right',
-        -- Basic
-        "TotalMatches" INT DEFAULT 0,
-        "TotalWins" INT DEFAULT 0,
-        "TotalLosses" INT DEFAULT 0,
-        "TotalOtl" INT DEFAULT 0,
-        -- Scoring
-        "TotalGoals" INT DEFAULT 0,
-        "TotalAssists" INT DEFAULT 0,
-        "TotalPoints" INT DEFAULT 0,
-        "PlusMinus" INT DEFAULT 0,
-        "TotalPim" INT DEFAULT 0,
-        "TotalTimeOnIce" DOUBLE PRECISION DEFAULT 0,
-        "TotalShots" INT DEFAULT 0,
-        "TotalShotAttempts" INT DEFAULT 0,
-        "TotalHits" INT DEFAULT 0,
-        -- Shooting detail
-        "HighDangerGoals" INT DEFAULT 0,
-        "LowDangerGoals" INT DEFAULT 0,
-        "PowerplayGoals" INT DEFAULT 0,
-        "ShorthandedGoals" INT DEFAULT 0,
-        "GameWinningGoals" INT DEFAULT 0,
-        -- Passing
-        "PrimaryAssists" INT DEFAULT 0,
-        "SecondaryAssists" INT DEFAULT 0,
-        "TotalPasses" INT DEFAULT 0,
-        "PassesCompleted" INT DEFAULT 0,
-        "DangerousPasses" INT DEFAULT 0,
-        -- Faceoffs
-        "FaceoffsTaken" INT DEFAULT 0,
-        "FaceoffsWon" INT DEFAULT 0,
-        -- Possession
-        "TotalPossessionTime" REAL DEFAULT 0,
-        "TotalPuckTouches" INT DEFAULT 0,
-        "Turnovers" INT DEFAULT 0,
-        "Recoveries" INT DEFAULT 0,
-        -- Defense
-        "TotalBlocks" INT DEFAULT 0,
-        "TotalInterceptions" INT DEFAULT 0,
-        "Takeaways" INT DEFAULT 0,
-        "StickChecks" INT DEFAULT 0,
-        "PokeChecks" INT DEFAULT 0,
-        -- Special teams
-        "PowerplayAssists" INT DEFAULT 0,
-        "ShorthandedAssists" INT DEFAULT 0,
-        -- On-ice
-        "OnIceGoalsFor" INT DEFAULT 0,
-        "OnIceGoalsAgainst" INT DEFAULT 0,
-        -- Distance
-        "TotalDistanceTraveled" REAL DEFAULT 0,
-        "TotalPlayTimeSeconds" DOUBLE PRECISION DEFAULT 0,
-        "OverallRating" INT DEFAULT 50,
-        "FirstSeen" TIMESTAMPTZ DEFAULT NOW(),
-        "LastSeen" TIMESTAMPTZ DEFAULT NOW(),
-        "LastUpdated" TIMESTAMPTZ DEFAULT NOW()
-      )
-    `);
+    const r = await fetch(`${SB}/rest/v1/Players?select=SteamId&limit=1`, { headers: H });
+    if (r.ok) return;
+  } catch {}
+  try {
+    const { Pool } = require('pg');
+    const p = new Pool({ connectionString: process.env.POSTGRES_URL, ssl: { rejectUnauthorized: false }, max: 1 });
+    const c = await p.connect();
+    await c.query(`CREATE TABLE IF NOT EXISTS "Players" ("SteamId" VARCHAR(32) PRIMARY KEY, "Username" VARCHAR(128) DEFAULT '', "Team" VARCHAR(16) DEFAULT 'None', "Archetype" VARCHAR(32) DEFAULT 'Unknown', "TotalMatches" INT DEFAULT 0, "TotalWins" INT DEFAULT 0, "TotalGoals" INT DEFAULT 0, "TotalAssists" INT DEFAULT 0, "TotalPoints" INT DEFAULT 0, "PlusMinus" INT DEFAULT 0, "TotalDistanceTraveled" REAL DEFAULT 0, "TotalPlayTimeSeconds" DOUBLE PRECISION DEFAULT 0, "TotalPuckTouches" INT DEFAULT 0, "TotalPossessionTime" REAL DEFAULT 0, "AverageSpeed" REAL DEFAULT 0, "TopSpeed" REAL DEFAULT 0, "LastUpdated" TIMESTAMPTZ DEFAULT NOW())`);
+    c.release(); await p.end();
+  } catch {}
+}
 
-    // Add missing columns for existing tables
-    const migrations = [
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "Team" VARCHAR(16) DEFAULT \'None\'',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "Role" VARCHAR(16) DEFAULT \'Attacker\'',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "Handedness" VARCHAR(8) DEFAULT \'Right\'',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalLosses" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalOtl" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalPoints" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "PlusMinus" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalPim" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalTimeOnIce" DOUBLE PRECISION DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalShots" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalShotAttempts" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalHits" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "HighDangerGoals" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "LowDangerGoals" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "PowerplayGoals" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "ShorthandedGoals" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "GameWinningGoals" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "PrimaryAssists" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "SecondaryAssists" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalPasses" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "PassesCompleted" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "DangerousPasses" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "FaceoffsTaken" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "FaceoffsWon" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalPossessionTime" REAL DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalPuckTouches" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "Turnovers" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "Recoveries" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalBlocks" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "TotalInterceptions" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "Takeaways" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "StickChecks" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "PokeChecks" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "PowerplayAssists" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "ShorthandedAssists" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "OnIceGoalsFor" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "OnIceGoalsAgainst" INT DEFAULT 0',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "FirstSeen" TIMESTAMPTZ DEFAULT NOW()',
-      'ALTER TABLE "Players" ADD COLUMN IF NOT EXISTS "LastSeen" TIMESTAMPTZ DEFAULT NOW()',
-    ];
-    for (const sql of migrations) { try { await query(sql); } catch {} }
+export async function getPlayer(steamId: string) {
+  const res = await fetch(`${SB}/rest/v1/Players?SteamId=eq.${encodeURIComponent(steamId)}&select=*`, { headers: H });
+  if (!res.ok) return null;
+  const rows = await res.json();
+  return rows?.[0] || null;
+}
 
-    await query(`
-      CREATE TABLE IF NOT EXISTS "PlayerRatings" (
-        "SteamId" VARCHAR(32) PRIMARY KEY,
-        "Skating" INT DEFAULT 50, "Shooting" INT DEFAULT 50,
-        "Stickhandling" INT DEFAULT 50, "Passing" INT DEFAULT 50,
-        "Inputs" INT DEFAULT 50, "StickMotion" INT DEFAULT 50,
-        "OffensivePlay" INT DEFAULT 50, "DefensivePlay" INT DEFAULT 50,
-        "Positioning" INT DEFAULT 50, "GameSense" INT DEFAULT 50,
-        "Overall" INT DEFAULT 50, "OverallPercentile" INT DEFAULT 50,
-        "ComputedAt" TIMESTAMPTZ DEFAULT NOW()
-      )
-    `);
+export async function upsertPlayer(d: any) {
+  const sid = d.SteamId;
+  if (!sid) return { error: 'No SteamId' };
 
-    await query(`
-      CREATE TABLE IF NOT EXISTS "RatingHistory" (
-        "Id" BIGSERIAL PRIMARY KEY,
-        "SteamId" VARCHAR(32) NOT NULL,
-        "OverallRating" INT DEFAULT 50,
-        "RecordedAt" TIMESTAMPTZ DEFAULT NOW()
-      )
-    `);
-  } catch (err: any) { console.error('initTables error:', err?.message); }
+  // Get current values
+  let prev: any = {};
+  try { const r = await getPlayer(sid); if (r) prev = r; } catch {}
+
+  const g = Math.max(0, Math.floor(d.Goals || 0));
+  const a = Math.max(0, Math.floor(d.Assists || 0));
+  const pm = (d.BlueScore || 0) - (d.RedScore || 0);
+  const w = (d.BlueScore || 0) > (d.RedScore || 0) ? 1 : 0;
+  const _ = (v: any) => v ?? 0;
+
+  const row = {
+    SteamId: sid, Username: (d.Username || _(prev.Username) || '').substring(0, 128),
+    Team: d.Team || _(prev.Team) || 'None',
+    TotalMatches: _(prev.TotalMatches || prev.totalmatches) + 1,
+    TotalWins: _(prev.TotalWins || prev.totalwins) + w,
+    TotalGoals: _(prev.TotalGoals || prev.totalgoals) + g,
+    TotalAssists: _(prev.TotalAssists || prev.totalassists) + a,
+    TotalPoints: _(prev.TotalPoints || prev.totalpoints) + g + a,
+    PlusMinus: _(prev.PlusMinus || prev.plusminus) + pm,
+    TotalDistanceTraveled: _(prev.TotalDistanceTraveled || prev.totaldistancetraveled) + parseFloat(d.DistanceTraveled || 0),
+    TotalPlayTimeSeconds: _(prev.TotalPlayTimeSeconds || prev.totalplaytimeseconds) + parseFloat(d.MatchLengthSeconds || 0),
+    TotalPuckTouches: _(prev.TotalPuckTouches || prev.totalpucktouches) + Math.floor(d.PuckTouches || 0),
+    TotalPossessionTime: _(prev.TotalPossessionTime || prev.totalpossessiontime) + parseFloat(d.PossessionTimeSeconds || 0),
+    AverageSpeed: parseFloat(d.AverageSpeed) || _(prev.AverageSpeed || prev.averagespeed),
+    TopSpeed: Math.max(parseFloat(d.TopSpeed) || 0, _(prev.TopSpeed || prev.topspeed)),
+    LastUpdated: new Date().toISOString(),
+  };
+
+  try {
+    const res = await fetch(`${SB}/rest/v1/Players?on_conflict=SteamId`, {
+      method: 'POST',
+      headers: { ...H, 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify(row),
+    });
+    const txt = await res.text();
+    if (!res.ok) return { error: `SUPABASE ${res.status}: ${txt.substring(0,200)}` };
+    return { ok: true, debug: `${res.status} ${txt.substring(0,50)}` };
+  } catch (e: any) { return { error: e.message }; }
 }
