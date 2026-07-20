@@ -29,8 +29,6 @@ public class PlayerController : ControllerBase
     public async Task<ActionResult<PlayerProfile>> GetPlayer(string steamId)
     {
         var profile = await _playerService.GetPlayerProfile(steamId);
-        if (profile == null)
-            return NotFound(new { error = "Player not found" });
         return Ok(profile);
     }
 

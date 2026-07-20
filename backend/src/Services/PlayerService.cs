@@ -27,7 +27,26 @@ public class PlayerService
         try
         {
             var player = await _db.Players.FindAsync(steamId);
-            if (player == null) return null;
+            if (player == null)
+            {
+                // Player not yet in DB — return a default profile
+                return new PlayerProfile
+                {
+                    SteamId = steamId,
+                    Username = steamId.Length > 10 ? steamId[..10] : steamId,
+                    AvatarUrl = "",
+                    Ratings = _ratingEngine.ComputeRatings(PlayerTelemetryAggregate.Neutral()),
+                    Percentiles = _ratingEngine.ComputePercentiles(new PlayerRatings()),
+                    Archetype = Archetype.Unknown,
+                    TotalMatches = 0,
+                    TotalGoals = 0,
+                    TotalAssists = 0,
+                    TotalSaves = 0,
+                    WinRate = 0,
+                    RecentMatches = Array.Empty<RecentMatch>(),
+                    LastUpdated = DateTime.UtcNow
+                };
+            }
 
             var ratings = await _db.PlayerRatings.FindAsync(steamId);
             var recentMatches = await _db.MatchPlayers
@@ -67,7 +86,14 @@ public class PlayerService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "DB query failed for player {SteamId}", steamId);
-            return null;
+            return new PlayerProfile
+            {
+                SteamId = steamId,
+                Username = "Player",
+                Ratings = new PlayerRatings { Overall = 50 },
+                Archetype = Archetype.Unknown,
+                LastUpdated = DateTime.UtcNow
+            };
         }
     }
 
