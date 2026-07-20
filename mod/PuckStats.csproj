@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net4.8</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <AssemblyName>PuckStats</AssemblyName>
+    <RootNamespace>PuckStats</RootNamespace>
+    <MSBuildWarningsAsMessages>MSB3277</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Libs Include="libs\*.dll" />
+    <Reference Include="@(Libs)">
+      <HintPath>%(Libs.FullPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="libs\0Harmony.dll" Pack="false">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PostBuildDeploy" AfterTargets="Build">
+    <MakeDir Directories="C:\Program Files (x86)\Steam\steamapps\common\Puck\Plugins\PuckStats" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll"
+          DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Puck\Plugins\PuckStats"
+          OverwriteReadOnlyFiles="true" />
+  </Target>
+</Project>
