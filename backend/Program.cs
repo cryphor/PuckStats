@@ -5,12 +5,24 @@ using PuckStats.Api.Services;
 using PuckStats.Api.Hubs;
 using PuckStats.Analytics;
 
-var builder = WebApplication.CreateBuilder(args);
-
 // Railway/cloud deployment: use PORT env var if present
 var port = Environment.GetEnvironmentVariable("PORT");
-if (!string.IsNullOrEmpty(port))
-    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+var url = !string.IsNullOrEmpty(port) ? $"http://0.0.0.0:{port}" : null;
+
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    EnvironmentName = "Production",
+    ApplicationName = "PuckStats.Api"
+});
+
+// Clear default config sources (which use file watchers causing inotify issues)
+builder.Configuration.Sources.Clear();
+builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
+builder.Configuration.AddEnvironmentVariables();
+
+if (url != null)
+    builder.WebHost.UseUrls(url);
 
 // Logging
 Log.Logger = new LoggerConfiguration()
