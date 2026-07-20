@@ -135,4 +135,7 @@ app.MapGet("/api/player/{steamId}", async (string steamId, PlayerService playerS
     return Results.Ok(profile);
 });
 
+// Debug: echo route
+app.MapGet("/api/echo/{**rest}", (string rest) => Results.Ok(new { path = rest, time = DateTime.UtcNow }));
+
 app.Run();
