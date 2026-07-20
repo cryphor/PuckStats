@@ -23,16 +23,6 @@ public class PlayerController : ControllerBase
     }
 
     /// <summary>
-    /// Get a player's full profile with ratings, percentiles, and recent matches.
-    /// </summary>
-    [HttpGet("{steamId}")]
-    public async Task<ActionResult<PlayerProfile>> GetPlayer(string steamId)
-    {
-        var profile = await _playerService.GetPlayerProfile(steamId);
-        return Ok(profile);
-    }
-
-    /// <summary>
     /// Get detailed analytics for a player.
     /// </summary>
     [HttpGet("{steamId}/analytics")]

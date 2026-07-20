@@ -128,4 +128,11 @@ app.MapHub<TelemetryHub>("/hubs/telemetry");
 app.MapHub<ReplayHub>("/hubs/replay");
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
+// Direct player endpoint (bypasses controller DI issues)
+app.MapGet("/api/player/{steamId}", async (string steamId, PlayerService playerService) =>
+{
+    var profile = await playerService.GetPlayerProfile(steamId);
+    return Results.Ok(profile);
+});
+
 app.Run();
