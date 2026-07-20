@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: puckstats-api
+    env: dotnet
+    region: oregon
+    plan: free
+    rootDir: backend/
+    buildCommand: dotnet build -c Release
+    startCommand: dotnet run --project . --urls http://0.0.0.0:$PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: puckstats-db
+          property: connectionString
+      - key: ConnectionStrings__Redis
+        value: ""
+      - key: ReplayStoragePath
+        value: /data/replays
+
+databases:
+  - type: postgresql
+    name: puckstats-db
+    region: oregon
+    plan: free
+    databaseName: puckstats
+    ipAllowList: []
