@@ -17,7 +17,6 @@ Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
     .WriteTo.Console()
-    .WriteTo.File("logs/puckstats-.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 builder.Host.UseSerilog();
 
@@ -25,28 +24,19 @@ builder.Host.UseSerilog();
 builder.Services.AddDbContext<PuckStatsDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Redis for caching & real-time
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-    options.InstanceName = "PuckStats:";
-});
-
 // Services
-builder.Services.AddSingleton<PopulationStats>();
 builder.Services.AddSingleton<RatingEngine>();
 builder.Services.AddScoped<PlayerService>();
-builder.Services.AddScoped<MatchService>();
 builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddScoped<ReplayService>();
 builder.Services.AddScoped<LeaderboardService>();
 builder.Services.AddHostedService<TelemetryProcessorService>();
 
-// SignalR for real-time pipeline
+// SignalR
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = builder.Environment.IsDevelopment();
-    options.MaximumReceiveMessageSize = 256 * 1024; // 256KB
+    options.MaximumReceiveMessageSize = 256 * 1024;
 });
 
 // Controllers + Swagger
@@ -63,32 +53,31 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "PuckStats API", Version = "v1" });
 });
 
-// CORS for website
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("WebClient", policy =>
     {
-        policy.WithOrigins("https://puckstats.io", "http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
 
-// Health checks
-builder.Services.AddHealthChecks()
-    .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
-
 var app = builder.Build();
 
-// Apply migrations
-using (var scope = app.Services.CreateScope())
+// Apply migrations (try, but don't crash if DB not available yet)
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<PuckStatsDbContext>();
-    db.Database.Migrate();
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<PuckStatsDbContext>();
+        db.Database.Migrate();
+    }
+}
+catch (Exception ex)
+{
+    Log.Warning(ex, "Database migration failed — will retry on next request");
 }
 
-// Middleware pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

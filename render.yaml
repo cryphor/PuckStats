@@ -1,12 +1,10 @@
 services:
   - type: web
     name: puckstats-api
-    env: dotnet
+    env: docker
+    dockerfilePath: backend/Dockerfile
     region: oregon
     plan: free
-    rootDir: backend/
-    buildCommand: dotnet build -c Release
-    startCommand: dotnet run --project . --urls http://0.0.0.0:$PORT
     healthCheckPath: /health
     envVars:
       - key: ASPNETCORE_ENVIRONMENT

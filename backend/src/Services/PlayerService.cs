@@ -38,7 +38,7 @@ public class PlayerService
             .Select(mp => new RecentMatch
             {
                 MatchId = mp.MatchId,
-                Team = Enum.TryParse<PlayerTeam>(mp.Team, out var t) ? t : PlayerTeam.None,
+                Team = mp.Team.ToString(),
                 Goals = mp.Goals,
                 Assists = mp.Assists,
                 Rating = mp.MatchRating
@@ -103,31 +103,32 @@ public class PlayerService
             _ => query.OrderByDescending(r => r.Overall)
         };
 
-        var entries = await query
+        var rawEntries = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Join(_db.Players,
                 r => r.SteamId,
                 p => p.SteamId,
-                (r, p) => new LeaderboardEntry
-                {
-                    SteamId = r.SteamId,
-                    Username = p.Username,
-                    Rating = category switch
-                    {
-                        "Overall" => r.Overall,
-                        "Skating" => r.Skating,
-                        "Shooting" => r.Shooting,
-                        "Stickhandling" => r.Stickhandling,
-                        "Passing" => r.Passing,
-                        "Inputs" => r.Inputs,
-                        "GameSense" => r.GameSense,
-                        _ => r.Overall
-                    },
-                    MatchesPlayed = p.TotalMatches,
-                    Archetype = Enum.TryParse<Archetype>(p.Archetype, out var a) ? a : Archetype.Unknown
-                })
+                (r, p) => new { r, p })
             .ToListAsync();
+
+        var entries = rawEntries.Select(x => new LeaderboardEntry
+        {
+            SteamId = x.r.SteamId,
+            Username = x.p.Username,
+            Rating = category switch
+            {
+                "Skating" => x.r.Skating,
+                "Shooting" => x.r.Shooting,
+                "Stickhandling" => x.r.Stickhandling,
+                "Passing" => x.r.Passing,
+                "Inputs" => x.r.Inputs,
+                "GameSense" => x.r.GameSense,
+                _ => x.r.Overall
+            },
+            MatchesPlayed = x.p.TotalMatches,
+            Archetype = Enum.TryParse<Archetype>(x.p.Archetype, out var a) ? a : Archetype.Unknown
+        }).ToList();
 
         // Assign ranks
         for (int i = 0; i < entries.Count; i++)
