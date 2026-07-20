@@ -10,6 +10,6 @@ services:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: ConnectionStrings__DefaultConnection
-        value: "Host=aws-0-us-east-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.gxwdigzfxzbgjzkdzoys;Password=PuckStats2024!;SSL Mode=Require;Trust Server Certificate=true"
+        value: "postgresql://postgres.gxwdigzfxzbgjzkdzoys:PuckStats2024%21@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require"
       - key: ReplayStoragePath
         value: /data/replays
