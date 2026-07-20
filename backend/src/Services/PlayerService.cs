@@ -24,43 +24,51 @@ public class PlayerService
 
     public async Task<PlayerProfile?> GetPlayerProfile(string steamId)
     {
-        var player = await _db.Players.FindAsync(steamId);
-        if (player == null) return null;
-
-        var ratings = await _db.PlayerRatings.FindAsync(steamId);
-        var recentMatches = await _db.MatchPlayers
-            .Where(mp => mp.SteamId == steamId)
-            .OrderByDescending(mp => _db.Matches
-                .Where(m => m.MatchId == mp.MatchId)
-                .Select(m => m.StartTime)
-                .FirstOrDefault())
-            .Take(10)
-            .Select(mp => new RecentMatch
-            {
-                MatchId = mp.MatchId,
-                Team = mp.Team.ToString(),
-                Goals = mp.Goals,
-                Assists = mp.Assists,
-                Rating = mp.MatchRating
-            })
-            .ToListAsync();
-
-        return new PlayerProfile
+        try
         {
-            SteamId = player.SteamId,
-            Username = player.Username,
-            AvatarUrl = player.AvatarUrl,
-            Ratings = ratings != null ? EntityToRatings(ratings) : new PlayerRatings(),
-            Percentiles = ratings != null ? EntityToPercentiles(ratings) : new Percentiles(),
-            Archetype = Enum.TryParse<Archetype>(player.Archetype, out var arch) ? arch : Archetype.Unknown,
-            TotalMatches = player.TotalMatches,
-            TotalGoals = player.TotalGoals,
-            TotalAssists = player.TotalAssists,
-            TotalSaves = player.TotalSaves,
-            WinRate = player.TotalMatches > 0 ? (float)player.TotalWins / player.TotalMatches : 0,
-            RecentMatches = recentMatches.ToArray(),
-            LastUpdated = player.LastUpdated
-        };
+            var player = await _db.Players.FindAsync(steamId);
+            if (player == null) return null;
+
+            var ratings = await _db.PlayerRatings.FindAsync(steamId);
+            var recentMatches = await _db.MatchPlayers
+                .Where(mp => mp.SteamId == steamId)
+                .OrderByDescending(mp => _db.Matches
+                    .Where(m => m.MatchId == mp.MatchId)
+                    .Select(m => m.StartTime)
+                    .FirstOrDefault())
+                .Take(10)
+                .Select(mp => new RecentMatch
+                {
+                    MatchId = mp.MatchId,
+                    Team = mp.Team.ToString(),
+                    Goals = mp.Goals,
+                    Assists = mp.Assists,
+                    Rating = mp.MatchRating
+                })
+                .ToListAsync();
+
+            return new PlayerProfile
+            {
+                SteamId = player.SteamId,
+                Username = player.Username,
+                AvatarUrl = player.AvatarUrl,
+                Ratings = ratings != null ? EntityToRatings(ratings) : new PlayerRatings(),
+                Percentiles = ratings != null ? EntityToPercentiles(ratings) : new Percentiles(),
+                Archetype = Enum.TryParse<Archetype>(player.Archetype, out var arch) ? arch : Archetype.Unknown,
+                TotalMatches = player.TotalMatches,
+                TotalGoals = player.TotalGoals,
+                TotalAssists = player.TotalAssists,
+                TotalSaves = player.TotalSaves,
+                WinRate = player.TotalMatches > 0 ? (float)player.TotalWins / player.TotalMatches : 0,
+                RecentMatches = recentMatches.ToArray(),
+                LastUpdated = player.LastUpdated
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "DB query failed for player {SteamId}", steamId);
+            return null;
+        }
     }
 
     public async Task UpdatePlayerFromMatch(MatchSubmissionRequest match)

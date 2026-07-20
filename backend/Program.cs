@@ -32,11 +32,24 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 builder.Host.UseSerilog();
 
-// Database
-builder.Services.AddDbContext<PuckStatsDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection") ?? 
-        Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ?? 
-        "Host=localhost;Database=puckstats"));
+// Database — only configure if we have a valid connection string
+var connStr = builder.Configuration.GetConnectionString("DefaultConnection") 
+              ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+              ?? Environment.GetEnvironmentVariable("DATABASE_URL")
+              ?? "";
+              
+if (!string.IsNullOrEmpty(connStr))
+{
+    Log.Information("Configuring PostgreSQL: {ConnStrPrefix}", connStr.Length > 30 ? connStr[..30] + "..." : connStr);
+    builder.Services.AddDbContext<PuckStatsDbContext>(options =>
+        options.UseNpgsql(connStr));
+}
+else
+{
+    Log.Warning("No database connection string found — API will start without persistence");
+    builder.Services.AddDbContext<PuckStatsDbContext>(options =>
+        options.UseNpgsql("Host=localhost;Database=puckstats;Username=postgres;Password=postgres"));
+}
 
 // Services
 builder.Services.AddSingleton<RatingEngine>();
