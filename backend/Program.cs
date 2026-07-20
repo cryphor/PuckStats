@@ -34,7 +34,9 @@ builder.Host.UseSerilog();
 
 // Database
 builder.Services.AddDbContext<PuckStatsDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection") ?? 
+        Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ?? 
+        "Host=localhost;Database=puckstats"));
 
 // Services
 builder.Services.AddSingleton<RatingEngine>();
@@ -102,6 +104,6 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<TelemetryHub>("/hubs/telemetry");
 app.MapHub<ReplayHub>("/hubs/replay");
-app.MapHealthChecks("/health");
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
 app.Run();
